@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { addToCart, clearCart, placeOrder, removeFromCart } from './store.js'
+import { addToCart, clearCart, loadMenu, placeOrder, removeFromCart } from './store.js'
 import AdminPage from './AdminPage.jsx'
 import UserAuth from './UserAuth.jsx'
 import { ArrowRight, Bike, Check, ChevronDown, Clock3, MapPin, Minus, Package, Plus, Search, ShoppingBag, Star, X } from 'lucide-react'
@@ -31,6 +31,7 @@ function UserApp() {
   const dispatch = useDispatch()
   const cartItems = useSelector((state) => state.cart.items)
   const menu = useSelector((state) => state.menu.items)
+  const menuStatus = useSelector((state) => state.menu.status)
   const orders = useSelector((state) => state.orders.orders)
   const [view, setView] = useState('menu')
   const [category, setCategory] = useState('All')
@@ -47,6 +48,10 @@ function UserApp() {
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const findCartItem = (id) => cartItems.find((item) => item.id === id)
+
+  useEffect(() => {
+    if (menuStatus === 'idle') dispatch(loadMenu())
+  }, [dispatch, menuStatus])
 
   const checkout = () => {
     dispatch(placeOrder({ id: `PL-${Math.floor(1000 + Math.random() * 8999)}`, date: 'Today', status: 'Preparing', total: subtotal + 2.5, items: cartItems.map((item) => item.name), address, paymentMethod: `Card ending ${payment.cardNumber.slice(-4)}` }))

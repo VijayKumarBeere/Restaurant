@@ -1,0 +1,8 @@
+C:\Users\vijay\Restaurant\Restaurant-API\obj\Validation\Debug\net10.0\Restaurant-API.csproj.AssemblyReference.cache
+C:\Users\vijay\Restaurant\Restaurant-API\obj\Validation\Debug\net10.0\rpswa.dswa.cache.json
+C:\Users\vijay\Restaurant\Restaurant-API\obj\Validation\Debug\net10.0\Restaurant-API.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\vijay\Restaurant\Restaurant-API\obj\Validation\Debug\net10.0\Restaurant-API.AssemblyInfoInputs.cache
+C:\Users\vijay\Restaurant\Restaurant-API\obj\Validation\Debug\net10.0\Restaurant-API.AssemblyInfo.cs
+C:\Users\vijay\Restaurant\Restaurant-API\obj\Validation\Debug\net10.0\Restaurant-API.csproj.CoreCompileInputs.cache
+C:\Users\vijay\Restaurant\Restaurant-API\obj\Validation\Debug\net10.0\Restaurant-API.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\vijay\Restaurant\Restaurant-API\obj\Validation\Debug\net10.0\Restaurant-API.sourcelink.json
