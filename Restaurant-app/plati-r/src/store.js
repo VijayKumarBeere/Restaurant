@@ -1,8 +1,29 @@
 import { configureStore, createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { getMenu } from './api.js'
 
-export const loadMenu = createAsyncThunk('menu/loadMenu', getMenu)
+const normalizeOrder = (order) => ({
+  id: order?.id ?? order?.Id,
+  orderNumber: order?.orderNumber ?? order?.OrderNumber ?? 'N/A',
+  date: order?.createdAt || order?.CreatedAt
+    ? new Date(order?.createdAt ?? order?.CreatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : 'Today',
+  status: order?.status ?? order?.Status ?? 'Preparing',
+  total: Number(order?.total ?? order?.Total ?? 0),
+  items: (order?.items ?? order?.Items ?? []).map((item) => item?.itemName ?? item?.ItemName ?? item?.name ?? item?.Name ?? 'Item'),
+})
 
+export const loadMenu = createAsyncThunk('menu/loadMenu', getMenu)
+export const loadOrders = createAsyncThunk('orders/loadOrders', async () => {
+  const token = JSON.parse(sessionStorage.getItem('user') || '{}').token
+  if (!token) throw new Error('User is not authenticated')
+  const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5177/api'}/orders`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok) throw new Error('Failed to load orders')
+  const orders = await response.json()
+  return orders.map(normalizeOrder)
+})
 const menuSlice = createSlice({
   name: 'menu',
   initialState: { items: [], status: 'idle', error: null },
@@ -43,15 +64,21 @@ const cartSlice = createSlice({
 
 const ordersSlice = createSlice({
   name: 'orders',
-  initialState: { orders: [{ id: 'PL-2048', date: 'Aug 19, 2024', status: 'Delivered', total: 42.75, items: ['Truffle mushroom pizza', 'Green goddess salad', 'Pistachio tiramisu'] }] },
+  initialState: { orders: [], status: 'idle', error: null },
   reducers: {
     placeOrder: (state, action) => {
       state.orders.unshift(action.payload)
-    },
+    }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loadOrders.pending, (state) => { state.status = 'loading'; state.error = null })
+      .addCase(loadOrders.fulfilled, (state, action) => { state.status = 'succeeded'; state.orders = action.payload })
+      .addCase(loadOrders.rejected, (state, action) => { state.status = 'failed'; state.error = action.error.message })
   },
 })
 
 export const { addToCart, removeFromCart, clearCart } = cartSlice.actions
 export const { addMenuItem, updateMenuItem, deleteMenuItem } = menuSlice.actions
-export const { placeOrder } = ordersSlice.actions
+export const { placeOrder, getOrders } = ordersSlice.actions
 export const store = configureStore({ reducer: { menu: menuSlice.reducer, cart: cartSlice.reducer, orders: ordersSlice.reducer } })

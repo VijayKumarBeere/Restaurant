@@ -182,7 +182,7 @@
     "Parameters": [],
     "ReturnTypes": [
       {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[Restaurant_API.Models.Order, Restaurant-API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[Restaurant_API.DTO.OrderDto, Restaurant-API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -208,7 +208,7 @@
     ],
     "ReturnTypes": [
       {
-        "Type": "Restaurant_API.Models.Order",
+        "Type": "Restaurant_API.DTO.OrderDto",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -234,7 +234,7 @@
     ],
     "ReturnTypes": [
       {
-        "Type": "Restaurant_API.Models.Order",
+        "Type": "Restaurant_API.DTO.OrderDto",
         "MediaTypes": [
           "text/plain",
           "application/json",

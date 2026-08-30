@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { addToCart, clearCart, loadMenu, placeOrder, removeFromCart } from './store.js'
+import { addToCart, clearCart, loadMenu, loadOrders, placeOrder, removeFromCart } from './store.js'
 import AdminPage from './AdminPage.jsx'
 import UserAuth from './UserAuth.jsx'
 import { ArrowRight, Bike, Check, ChevronDown, Clock3, MapPin, Minus, Package, Plus, Search, ShoppingBag, Star, X } from 'lucide-react'
 import './App.css'
+import { placeOrderApi } from './api.js'
 
 function FoodCard({ item, cartItem, onAdd, onRemove, onViewCart }) {
   const quantity = cartItem?.quantity || 0
@@ -42,7 +43,7 @@ function UserApp() {
   const [address, setAddress] = useState({ name: '', street: '', city: '', postalCode: '', phone: '' })
   const [payment, setPayment] = useState({ cardName: '', cardNumber: '', expiry: '', cvv: '' })
   const [authMode, setAuthMode] = useState(null)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!JSON.parse(sessionStorage.getItem('user') || 'null'))
   const categories = ['All', 'Pizza', 'Burgers', 'Asian', 'Healthy', 'Desserts']
   const filteredItems = menu.filter((item) => (category === 'All' || item.category === category) && item.name.toLowerCase().includes(search.toLowerCase()))
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
@@ -53,16 +54,54 @@ function UserApp() {
     if (menuStatus === 'idle') dispatch(loadMenu())
   }, [dispatch, menuStatus])
 
-  const checkout = () => {
-    dispatch(placeOrder({ id: `PL-${Math.floor(1000 + Math.random() * 8999)}`, date: 'Today', status: 'Preparing', total: subtotal + 2.5, items: cartItems.map((item) => item.name), address, paymentMethod: `Card ending ${payment.cardNumber.slice(-4)}` }))
-    dispatch(clearCart())
-    setCartOpen(false)
-    setCheckoutStep(null)
-    setOrdered(true)
+  useEffect(() => {
+    if (isLoggedIn) dispatch(loadOrders())
+  }, [dispatch, isLoggedIn])
+
+  const handleOpenOrders = async () => {
+    if (isLoggedIn) {
+      await dispatch(loadOrders())
+      console.log('Orders loaded:', orders)
+    }
+    setView('orders')
   }
 
   const updateAddress = (field, value) => setAddress({ ...address, [field]: value })
   const updatePayment = (field, value) => setPayment({ ...payment, [field]: value })
+
+  const checkout = async () => {
+    const storedUser = JSON.parse(sessionStorage.getItem('user') || 'null')
+    const token = storedUser?.token
+
+    const orderPayload = {
+      items: cartItems.map((item) => ({
+        menuItemId: item.id,
+        quantity: item.quantity,
+      })),
+      deliveryName: address.name,
+      street: address.street,
+      city: address.city,
+      postalCode: address.postalCode,
+      phone: address.phone,
+      paymentReference: payment.cardNumber ? `card_${payment.cardNumber.replace(/\D/g, '').slice(-4)}` : 'offline',
+    }
+
+    try {
+      await placeOrderApi(orderPayload, token)
+      await dispatch(loadOrders())
+      dispatch(clearCart())
+      setCartOpen(false)
+      setCheckoutStep(null)
+      setView('menu')
+      setOrdered(true)
+    } catch (error) {
+      console.error('Order placement failed:', error)
+      setCartOpen(false)
+      setCheckoutStep(null)
+      setView('menu')
+      setOrdered(false)
+    }
+  }
 
   return (
     <div className="app-shell">
@@ -73,7 +112,7 @@ function UserApp() {
         </button>
         {isLoggedIn && 
           <nav><button className={view === 'menu' ? 'active' : ''} onClick={() => setView('menu')}>Discover</button>
-          <button className={view === 'orders' ? 'active' : ''} onClick={() => setView('orders')}>Past orders</button>
+          <button className={view === 'orders' ? 'active' : ''} onClick={handleOpenOrders}>Past orders</button>
           </nav>
         }
         <div className="header-actions">
@@ -87,7 +126,11 @@ function UserApp() {
               <button className="signup-button" onClick={() => setAuthMode('signup')}>Sign up</button>
             </>
           }
-          {isLoggedIn && <button className="account-button" onClick={() => setIsLoggedIn(false)}>Log out</button>}
+          {isLoggedIn && <button className="account-button" onClick={() => { 
+            sessionStorage.removeItem('user')
+            setView('menu');
+            setIsLoggedIn(false) 
+          }}>Log out</button>}
           {isLoggedIn && 
             <button className="cart-button" onClick={() => setCartOpen(true)}><ShoppingBag size={19} /> 
               <span>Cart</span>{cartCount > 0 && <strong>{cartCount}</strong>}
@@ -144,21 +187,27 @@ function UserApp() {
           <h1>Past orders</h1>
           <p className="page-intro">A little history of the good stuff.</p>
           <div className="order-list">
-            {orders.map((order) => <article className="order-card" key={order.id}>
-              <div className="order-icon"><Package size={21} /></div>
-              <div className="order-info">
-                <div><b>Order {order.id}</b>
-                  <span>{order.date}</span>
+            {orders.length === 0 ? (
+              <div className="empty-cart">
+                <Package size={32} />
+                <p>No past orders yet.</p>
+              </div>
+            ) : orders.map((order) => (
+              <article className="order-card" key={order.id}>
+                <div className="order-icon"><Package size={21} /></div>
+                <div className="order-info">
+                  <div><b>Order {order.orderNumber}</b>
+                    <span>{order.date}</span>
+                  </div>
+                  <p>{(order.items || []).join(' · ') || 'No items recorded'}</p>
                 </div>
-                <p>{order.items.join(' · ')}</p>
-              </div>
-              <div className="order-total">
-                <span className={`status ${order.status.toLowerCase()}`}>{order.status}</span>
-                <b>${order.total.toFixed(2)}</b>
-              </div>
-              <button className="reorder" onClick={() => { setView('menu'); setOrdered(false) }}>Order again <ArrowRight size={16} /></button>
-              </article>)
-            }
+                <div className="order-total">
+                  <span className={`status ${String(order.status).toLowerCase()}`}>{order.status}</span>
+                  <b>${Number(order.total || 0).toFixed(2)}</b>
+                </div>
+                <button className="reorder" onClick={() => { setView('menu'); setOrdered(false) }}>Order again <ArrowRight size={16} /></button>
+              </article>
+            ))}
           </div>
         </main>
       }

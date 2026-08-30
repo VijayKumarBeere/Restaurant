@@ -74,3 +74,14 @@ export function deleteMenuItemApi(id, token) {
     headers: { Authorization: `Bearer ${token}` },
   })
 }
+
+export function placeOrderApi(order, token) {
+  return request('/orders', {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: JSON.stringify(order),
+  })
+}
+
+
+

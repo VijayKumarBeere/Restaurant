@@ -163,3 +163,13 @@ C:\Users\vijay\Restaurant\Restaurant-API\obj\Debug\net10.0\Restaurant-API.genrun
 C:\Users\vijay\Restaurant\Restaurant-API\obj\Debug\net10.0\ref\Restaurant-API.dll
 C:\Users\vijay\Restaurant\Restaurant-API\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 C:\Users\vijay\Restaurant\Restaurant-API\bin\Debug\net10.0\Microsoft.Bcl.Cryptography.dll
+C:\Users\vijay\Restaurant\Restaurant-API\bin\Debug\net10.0\Microsoft.Extensions.Caching.Abstractions.dll
+C:\Users\vijay\Restaurant\Restaurant-API\bin\Debug\net10.0\Microsoft.Extensions.Caching.Memory.dll
+C:\Users\vijay\Restaurant\Restaurant-API\bin\Debug\net10.0\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\vijay\Restaurant\Restaurant-API\bin\Debug\net10.0\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\vijay\Restaurant\Restaurant-API\bin\Debug\net10.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\vijay\Restaurant\Restaurant-API\bin\Debug\net10.0\Microsoft.Extensions.Logging.dll
+C:\Users\vijay\Restaurant\Restaurant-API\bin\Debug\net10.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\vijay\Restaurant\Restaurant-API\bin\Debug\net10.0\Microsoft.Extensions.Options.dll
+C:\Users\vijay\Restaurant\Restaurant-API\bin\Debug\net10.0\Microsoft.Extensions.Primitives.dll
+C:\Users\vijay\Restaurant\Restaurant-API\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

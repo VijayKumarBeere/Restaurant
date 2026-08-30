@@ -21,7 +21,7 @@ namespace Restaurant_API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Order>>> GetMyOrders()
+        public async Task<ActionResult<IEnumerable<OrderDto>>> GetMyOrders()
         {
             var userId = GetUserId();
 
@@ -30,26 +30,81 @@ namespace Restaurant_API.Controllers
                 .Include(order => order.Items)
                 .Where(order => order.UserId == userId)
                 .OrderByDescending(order => order.CreatedAt)
+                .Select(order => new OrderDto
+                {
+                    Id = order.Id,
+                    OrderNumber = order.OrderNumber,
+                    UserId = order.UserId,
+                    Subtotal = order.Subtotal,
+                    DeliveryFee = order.DeliveryFee,
+                    Total = order.Total,
+                    Status = order.Status,
+                    CreatedAt = order.CreatedAt,
+                    DeliveryName = order.DeliveryName,
+                    Street = order.Street,
+                    City = order.City,
+                    PostalCode = order.PostalCode,
+                    Phone = order.Phone,
+                    PaymentReference = order.PaymentReference,
+                    Items = order.Items
+                        .Select(item => new OrderItemDto
+                        {
+                            Id = item.Id,
+                            MenuItemId = item.MenuItemId,
+                            ItemName = item.ItemName,
+                            UnitPrice = item.UnitPrice,
+                            Quantity = item.Quantity
+                        })
+                        .ToList()
+                })
                 .ToListAsync();
 
             return Ok(orders);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Order>> GetById(int id)
+        public async Task<ActionResult<OrderDto>> GetById(int id)
         {
             var userId = GetUserId();
 
             var order = await database.Orders
+                .AsNoTracking()
                 .Include(item => item.Items)
-                .SingleOrDefaultAsync(order =>
-                    order.Id == id && order.UserId == userId);
+                .Where(order => order.Id == id && order.UserId == userId)
+                .Select(order => new OrderDto
+                {
+                    Id = order.Id,
+                    OrderNumber = order.OrderNumber,
+                    UserId = order.UserId,
+                    Subtotal = order.Subtotal,
+                    DeliveryFee = order.DeliveryFee,
+                    Total = order.Total,
+                    Status = order.Status,
+                    CreatedAt = order.CreatedAt,
+                    DeliveryName = order.DeliveryName,
+                    Street = order.Street,
+                    City = order.City,
+                    PostalCode = order.PostalCode,
+                    Phone = order.Phone,
+                    PaymentReference = order.PaymentReference,
+                    Items = order.Items
+                        .Select(item => new OrderItemDto
+                        {
+                            Id = item.Id,
+                            MenuItemId = item.MenuItemId,
+                            ItemName = item.ItemName,
+                            UnitPrice = item.UnitPrice,
+                            Quantity = item.Quantity
+                        })
+                        .ToList()
+                })
+                .SingleOrDefaultAsync();
 
             return order is null ? NotFound() : Ok(order);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Order>> Create(CreateOrderRequest request)
+        public async Task<ActionResult<OrderDto>> Create(CreateOrderRequest request)
         {
             var userId = GetUserId();
 
@@ -102,13 +157,45 @@ namespace Restaurant_API.Controllers
             database.Orders.Add(order);
             await database.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetById), new { id = order.Id }, order);
+            var dto = new OrderDto
+            {
+                Id = order.Id,
+                OrderNumber = order.OrderNumber,
+                UserId = order.UserId,
+                Subtotal = order.Subtotal,
+                DeliveryFee = order.DeliveryFee,
+                Total = order.Total,
+                Status = order.Status,
+                CreatedAt = order.CreatedAt,
+                DeliveryName = order.DeliveryName,
+                Street = order.Street,
+                City = order.City,
+                PostalCode = order.PostalCode,
+                Phone = order.Phone,
+                PaymentReference = order.PaymentReference,
+                Items = order.Items
+                    .Select(item => new OrderItemDto
+                    {
+                        Id = item.Id,
+                        MenuItemId = item.MenuItemId,
+                        ItemName = item.ItemName,
+                        UnitPrice = item.UnitPrice,
+                        Quantity = item.Quantity
+                    })
+                    .ToList()
+            };
+
+            return CreatedAtAction(nameof(GetById), new { id = order.Id }, dto);
         }
 
         private int GetUserId()
         {
-            return int.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrWhiteSpace(userIdClaim))
+                throw new UnauthorizedAccessException("User identifier claim is missing.");
+
+            return int.Parse(userIdClaim);
         }
     }
 }
